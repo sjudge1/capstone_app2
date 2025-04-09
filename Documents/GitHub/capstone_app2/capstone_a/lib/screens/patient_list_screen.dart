@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/person.dart';
 import '../services/person_service.dart';
 import '../widgets/search_filter_bar.dart';
 import 'person_form_screen.dart';
+import 'matches_screen.dart';
 
 class PatientListScreen extends StatefulWidget {
   final String organType; // 'Lung' or 'Heart'
@@ -21,13 +23,47 @@ class PatientListScreen extends StatefulWidget {
 }
 
 class _PatientListScreenState extends State<PatientListScreen> {
-  final TextEditingController _searchController = TextEditingController();
+  final _searchController = TextEditingController();
+  final _personService = PersonService();
   String? _selectedBloodType;
   String? _selectedGender;
-  String? _selectedSortOption = 'name_asc';
-  RangeValues? _organSizeRange;
-  final PersonService _personService = PersonService();
+  String _selectedSortOption = 'name';
+  RangeValues _organSizeRange = const RangeValues(0, 100);
+  List<Person> _people = [];
   bool _isEditMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDefaultSort();
+    _loadPeople();
+  }
+
+  Future<void> _loadDefaultSort() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedSortOption = prefs.getString('defaultSortOption') ?? 'name';
+    });
+  }
+
+  Future<void> _loadPeople() async {
+    try {
+      final people = await PersonService.getPeople(
+        personType: widget.listType == 'patient' ? PersonType.patient : PersonType.donor,
+        userId: widget.userId,
+        organType: widget.organType.toLowerCase(),
+      );
+      setState(() {
+        _people = people;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading people: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +98,11 @@ class _PatientListScreenState extends State<PatientListScreen> {
             onSearchChanged: (value) => setState(() {}),
             onBloodTypeChanged: (value) => setState(() => _selectedBloodType = value),
             onGenderChanged: (value) => setState(() => _selectedGender = value),
-            onSortOptionChanged: (value) => setState(() => _selectedSortOption = value),
+            onSortOptionChanged: (value) {
+              if (value != null) {
+                setState(() => _selectedSortOption = value);
+              }
+            },
             onOrganSizeRangeChanged: (values) => setState(() => _organSizeRange = values),
           ),
           Expanded(
@@ -120,24 +160,12 @@ class _PatientListScreenState extends State<PatientListScreen> {
 
                 // Apply sorting
                 people.sort((a, b) {
-                  switch (_selectedSortOption ?? 'name_asc') {
-                    case 'name_asc':
+                  switch (_selectedSortOption) {
+                    case 'name':
                       return _getNameOrId(a).compareTo(_getNameOrId(b));
-                    case 'name_desc':
-                      return _getNameOrId(b).compareTo(_getNameOrId(a));
-                    case 'date_desc':
-                      return b.createdAt.compareTo(a.createdAt);
-                    case 'date_asc':
-                      return a.createdAt.compareTo(b.createdAt);
-                    case 'organ_size_asc':
-                      if (isLung) {
-                        return (a.predictedTotalLungCapacity ?? 0)
-                            .compareTo(b.predictedTotalLungCapacity ?? 0);
-                      } else {
-                        return (a.predictedTotalHeartMass ?? 0)
-                            .compareTo(b.predictedTotalHeartMass ?? 0);
-                      }
-                    case 'organ_size_desc':
+                    case 'date':
+                      return b.createdAt.compareTo(a.createdAt); // Most recent first
+                    case 'organ_size':
                       if (isLung) {
                         return (b.predictedTotalLungCapacity ?? 0)
                             .compareTo(a.predictedTotalLungCapacity ?? 0);
@@ -146,7 +174,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
                             .compareTo(a.predictedTotalHeartMass ?? 0);
                       }
                     default:
-                      return 0;
+                      return _getNameOrId(a).compareTo(_getNameOrId(b)); // Default to name
                   }
                 });
 
@@ -315,7 +343,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
             context,
             MaterialPageRoute(
               builder: (context) => PersonFormScreen(
-                listType: PersonType.patient,
+                listType: widget.listType == 'patient' ? PersonType.patient : PersonType.donor,
                 organType: widget.organType.toLowerCase(),
                 userId: widget.userId,
               ),
@@ -328,6 +356,8 @@ class _PatientListScreenState extends State<PatientListScreen> {
   }
 
   void _showPersonDetails(Person person) {
+    final String patientType = '${widget.organType.substring(0, 1).toUpperCase()}${widget.organType.substring(1)} ${widget.listType == 'patient' ? 'Recipient' : 'Donor'}';
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -337,15 +367,93 @@ class _PatientListScreenState extends State<PatientListScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Patient Type
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: widget.organType.toLowerCase() == 'lung' ? Colors.blue.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: widget.organType.toLowerCase() == 'lung' ? Colors.blue.withOpacity(0.3) : Colors.red.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      widget.listType == 'patient' ? Icons.person_outline : Icons.volunteer_activism,
+                      color: widget.organType.toLowerCase() == 'lung' ? Colors.blue : Colors.red,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      patientType,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: widget.organType.toLowerCase() == 'lung' ? Colors.blue : Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Medical Information Section
+              Text(
+                'Medical Information',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+              const SizedBox(height: 8),
               if (widget.organType.toLowerCase() == 'lung' && person.predictedTotalLungCapacity != null)
                 _buildDetailRow('Predicted TLC', '${person.predictedTotalLungCapacity!.toStringAsFixed(2)} L')
               else if (widget.organType.toLowerCase() == 'heart' && person.predictedTotalHeartMass != null)
                 _buildDetailRow('Predicted Heart Mass', '${person.predictedTotalHeartMass!.toStringAsFixed(2)} g'),
-              _buildDetailRow('Age', '${person.age}'),
+              _buildDetailRow('Age', person.age?.toString() ?? 'N/A'),
               _buildDetailRow('Height', '${person.height} cm'),
               _buildDetailRow('Weight', '${person.weight} kg'),
               _buildDetailRow('Gender', person.gender),
               _buildDetailRow('Blood Type', person.bloodType),
+              const SizedBox(height: 16),
+              
+              // Contact Information Section
+              Text(
+                'Contact Information',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildDetailRow('Phone', person.contactNumber ?? 'N/A'),
+              _buildDetailRow('Email', person.email ?? 'N/A'),
+              _buildDetailRow('Address', person.address ?? 'N/A'),
+              const SizedBox(height: 16),
+              
+              // Notes Section
+              if (person.notes?.isNotEmpty ?? false) ...[
+                Text(
+                  'Notes',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Text(
+                    person.notes ?? '',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -353,6 +461,22 @@ class _PatientListScreenState extends State<PatientListScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Close'),
+          ),
+          TextButton.icon(
+            icon: const Icon(Icons.people_outline),
+            label: const Text('Find Matches'),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MatchesScreen(
+                    person: person,
+                    userId: widget.userId,
+                  ),
+                ),
+              );
+            },
           ),
           ElevatedButton(
             onPressed: () {
@@ -362,7 +486,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
                 MaterialPageRoute(
                   builder: (context) => PersonFormScreen(
                     person: person,
-                    listType: PersonType.patient,
+                    listType: widget.listType == 'patient' ? PersonType.patient : PersonType.donor,
                     organType: widget.organType.toLowerCase(),
                     userId: widget.userId,
                   ),
@@ -383,7 +507,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 180,
+            width: 140,
             child: Text(
               label,
               style: const TextStyle(fontWeight: FontWeight.bold),

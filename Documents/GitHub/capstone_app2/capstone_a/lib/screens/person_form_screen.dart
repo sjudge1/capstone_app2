@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/person.dart';
 import '../services/person_service.dart';
 
@@ -58,6 +59,7 @@ class _PersonFormScreenState extends State<PersonFormScreen> {
   @override
   void initState() {
     super.initState();
+    _loadDefaultUnits();
     if (widget.person != null) {
       _nameController.text = widget.person!.name;
       _ageController.text = widget.person!.age?.toString() ?? '';
@@ -70,6 +72,15 @@ class _PersonFormScreenState extends State<PersonFormScreen> {
       _selectedGender = widget.person!.gender?.toLowerCase();
       _selectedBloodType = widget.person!.bloodType;
     }
+  }
+
+  Future<void> _loadDefaultUnits() async {
+    final prefs = await SharedPreferences.getInstance();
+    final useMetricUnits = prefs.getBool('useMetricUnits') ?? true;
+    setState(() {
+      _isMetric = useMetricUnits;
+      _isKilograms = useMetricUnits;
+    });
   }
 
   @override

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/person.dart';
 
-class SearchFilterBar extends StatelessWidget {
+class SearchFilterBar extends StatefulWidget {
   final TextEditingController searchController;
   final String? selectedBloodType;
   final String? selectedGender;
@@ -30,8 +30,44 @@ class SearchFilterBar extends StatelessWidget {
   });
 
   @override
+  State<SearchFilterBar> createState() => _SearchFilterBarState();
+}
+
+class _SearchFilterBarState extends State<SearchFilterBar> {
+  bool _showFilters = false;
+  late RangeValues _currentRange;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeRange();
+  }
+
+  @override
+  void didUpdateWidget(SearchFilterBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _initializeRange();
+  }
+
+  void _initializeRange() {
+    final bool isLung = widget.organType.toLowerCase() == 'lung';
+    final double minRange = isLung ? 2.0 : 75.0;
+    final double maxRange = isLung ? 10.0 : 500.0;
+    
+    if (widget.organSizeRange != null) {
+      // Ensure the values are within bounds
+      _currentRange = RangeValues(
+        widget.organSizeRange!.start.clamp(minRange, maxRange),
+        widget.organSizeRange!.end.clamp(minRange, maxRange)
+      );
+    } else {
+      _currentRange = RangeValues(minRange, maxRange);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final bool isLung = organType.toLowerCase() == 'lung';
+    final bool isLung = widget.organType.toLowerCase() == 'lung';
     final double minRange = isLung ? 2.0 : 75.0;
     final double maxRange = isLung ? 10.0 : 500.0;
     final String unit = isLung ? 'L' : 'g';
@@ -52,163 +88,222 @@ class SearchFilterBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search bar
-          TextField(
-            controller: searchController,
-            decoration: InputDecoration(
-              hintText: 'Search by name...',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-            ),
-            onChanged: onSearchChanged,
-          ),
-          const SizedBox(height: 16),
-          // Organ Size Range Filter
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Search bar and filter toggle button
+          Row(
             children: [
-              Text(
-                'Organ Size Range (${isLung ? 'Lung Capacity' : 'Heart Mass'})',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+              Expanded(
+                child: TextField(
+                  controller: widget.searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search by name...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  onChanged: widget.onSearchChanged,
                 ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Text('${minRange.toStringAsFixed(1)}$unit'),
-                  Expanded(
-                    child: RangeSlider(
-                      values: organSizeRange ?? RangeValues(minRange, maxRange),
-                      min: minRange,
-                      max: maxRange,
-                      divisions: isLung ? 80 : 425, // For more precise control
-                      labels: RangeLabels(
-                        organSizeRange?.start == minRange 
-                            ? 'All'
-                            : '${organSizeRange?.start.toStringAsFixed(1) ?? minRange.toStringAsFixed(1)}$unit',
-                        organSizeRange?.end == maxRange 
-                            ? '${maxRange.toStringAsFixed(1)}+$unit'
-                            : '${organSizeRange?.end.toStringAsFixed(1) ?? maxRange.toStringAsFixed(1)}$unit',
-                      ),
-                      onChanged: onOrganSizeRangeChanged,
-                    ),
-                  ),
-                  Text('${maxRange.toStringAsFixed(1)}+$unit'),
-                ],
+              const SizedBox(width: 8),
+              AnimatedRotation(
+                turns: _showFilters ? 0.5 : 0,
+                duration: const Duration(milliseconds: 200),
+                child: IconButton.filled(
+                  onPressed: () {
+                    setState(() {
+                      _showFilters = !_showFilters;
+                    });
+                  },
+                  icon: const Icon(Icons.filter_list),
+                  tooltip: _showFilters ? 'Hide filters' : 'Show filters',
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // Filters row
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
+          // Animated filter section
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Blood Type Filter
+                const SizedBox(height: 16),
+                // Sort Options - Moved above filters and styled differently
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey.shade300),
+                    ),
                   ),
-                  child: DropdownButton<String>(
-                    value: selectedBloodType,
-                    hint: const Text('Blood Type'),
-                    underline: const SizedBox(),
-                    items: [
-                      const DropdownMenuItem<String>(
-                        value: null,
-                        child: Text('All Blood Types'),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.sort, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Sort list by:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
-                      ...['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
-                          .map((type) => DropdownMenuItem<String>(
-                                value: type,
-                                child: Text(type),
-                              ))
-                          .toList(),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: DropdownButton<String>(
+                            value: widget.selectedSortOption,
+                            isExpanded: true,
+                            underline: const SizedBox(),
+                            items: [
+                              const DropdownMenuItem<String>(
+                                value: 'name',
+                                child: Text('Name'),
+                              ),
+                              const DropdownMenuItem<String>(
+                                value: 'date',
+                                child: Text('Date Added'),
+                              ),
+                              const DropdownMenuItem<String>(
+                                value: 'organ_size',
+                                child: Text('Organ Size'),
+                              ),
+                            ],
+                            onChanged: widget.onSortOptionChanged,
+                          ),
+                        ),
+                      ),
                     ],
-                    onChanged: onBloodTypeChanged,
                   ),
                 ),
-                const SizedBox(width: 8),
-                // Gender Filter
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: DropdownButton<String>(
-                    value: selectedGender,
-                    hint: const Text('Gender'),
-                    underline: const SizedBox(),
-                    items: [
-                      const DropdownMenuItem<String>(
-                        value: null,
-                        child: Text('All Genders'),
+                const SizedBox(height: 16),
+                // Filter section header
+                Row(
+                  children: [
+                    const Icon(Icons.filter_list, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Filter by:',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
-                      ...['Male', 'Female']
-                          .map((gender) => DropdownMenuItem<String>(
-                                value: gender,
-                                child: Text(gender),
-                              ))
-                          .toList(),
-                    ],
-                    onChanged: onGenderChanged,
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                // Sort Options
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: DropdownButton<String>(
-                    value: selectedSortOption,
-                    hint: const Text('Sort By'),
-                    underline: const SizedBox(),
-                    items: [
-                      const DropdownMenuItem<String>(
-                        value: null,
-                        child: Text('Default'),
+                const SizedBox(height: 16),
+                // Organ Size Range Filter
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Organ Size Range (${isLung ? 'Lung Capacity' : 'Heart Mass'})',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
-                      const DropdownMenuItem<String>(
-                        value: 'name_asc',
-                        child: Text('Name (A-Z)'),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text('${minRange.toStringAsFixed(1)}$unit'),
+                        Expanded(
+                          child: RangeSlider(
+                            values: _currentRange,
+                            min: minRange,
+                            max: maxRange,
+                            divisions: isLung ? 80 : 425,
+                            labels: RangeLabels(
+                              _currentRange.start == minRange 
+                                  ? 'All'
+                                  : '${_currentRange.start.toStringAsFixed(1)}$unit',
+                              _currentRange.end == maxRange 
+                                  ? '${maxRange.toStringAsFixed(1)}+$unit'
+                                  : '${_currentRange.end.toStringAsFixed(1)}$unit',
+                            ),
+                            onChanged: (RangeValues values) {
+                              setState(() {
+                                _currentRange = values;
+                              });
+                              widget.onOrganSizeRangeChanged(values);
+                            },
+                          ),
+                        ),
+                        Text('${maxRange.toStringAsFixed(1)}+$unit'),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Blood Type and Gender Filters
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      // Blood Type Filter
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: DropdownButton<String>(
+                          value: widget.selectedBloodType,
+                          hint: const Text('Blood Type'),
+                          underline: const SizedBox(),
+                          items: [
+                            const DropdownMenuItem<String>(
+                              value: null,
+                              child: Text('All Blood Types'),
+                            ),
+                            ...['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+                                .map((type) => DropdownMenuItem<String>(
+                                      value: type,
+                                      child: Text(type),
+                                    ))
+                                .toList(),
+                          ],
+                          onChanged: widget.onBloodTypeChanged,
+                        ),
                       ),
-                      const DropdownMenuItem<String>(
-                        value: 'name_desc',
-                        child: Text('Name (Z-A)'),
-                      ),
-                      const DropdownMenuItem<String>(
-                        value: 'date_desc',
-                        child: Text('Most Recent'),
-                      ),
-                      const DropdownMenuItem<String>(
-                        value: 'date_asc',
-                        child: Text('Oldest'),
-                      ),
-                      const DropdownMenuItem<String>(
-                        value: 'organ_size_asc',
-                        child: Text('Organ Size (Smallest)'),
-                      ),
-                      const DropdownMenuItem<String>(
-                        value: 'organ_size_desc',
-                        child: Text('Organ Size (Largest)'),
+                      const SizedBox(width: 8),
+                      // Gender Filter
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: DropdownButton<String>(
+                          value: widget.selectedGender,
+                          hint: const Text('Gender'),
+                          underline: const SizedBox(),
+                          items: [
+                            const DropdownMenuItem<String>(
+                              value: null,
+                              child: Text('All Genders'),
+                            ),
+                            ...['Male', 'Female']
+                                .map((gender) => DropdownMenuItem<String>(
+                                      value: gender,
+                                      child: Text(gender),
+                                    ))
+                                .toList(),
+                          ],
+                          onChanged: widget.onGenderChanged,
+                        ),
                       ),
                     ],
-                    onChanged: onSortOptionChanged,
                   ),
                 ),
               ],
             ),
+            crossFadeState: _showFilters ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
           ),
         ],
       ),

@@ -440,34 +440,71 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      'Key Features',
-                      style: Theme.of(context).textTheme.titleLarge,
-                      textAlign: TextAlign.center,
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withOpacity(0.03),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildFeatureCard(
-                    context,
-                    title: 'Size Matching Calculator',
-                    description: 'Calculate compatibility scores based on organ measurements and patient characteristics',
-                    icon: Icons.calculate_outlined,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildFeatureCard(
-                    context,
-                    title: 'Patient & Donor Management',
-                    description: 'Maintain separate lists for heart and lung transplant candidates and donors',
-                    icon: Icons.people_outline,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildFeatureCard(
-                    context,
-                    title: 'Match Justification',
-                    description: 'Document and track the reasoning behind organ size matching decisions',
-                    icon: Icons.description_outlined,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.star_outline,
+                                  color: Theme.of(context).primaryColor,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Key Features',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                          child: Column(
+                            children: [
+                              _buildFeatureItem(
+                                context,
+                                icon: Icons.calculate_outlined,
+                                title: 'Size Matching Calculator',
+                                description: 'Calculate compatibility scores based on organ measurements and patient characteristics',
+                              ),
+                              const SizedBox(height: 20),
+                              _buildFeatureItem(
+                                context,
+                                icon: Icons.people_outline,
+                                title: 'Patient & Donor Management',
+                                description: 'Maintain separate lists for heart and lung transplant candidates and donors',
+                              ),
+                              const SizedBox(height: 20),
+                              _buildFeatureItem(
+                                context,
+                                icon: Icons.description_outlined,
+                                title: 'Match Justification',
+                                description: 'Document and track the reasoning behind organ size matching decisions',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -509,45 +546,53 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureCard(
+  Widget _buildFeatureItem(
     BuildContext context, {
+    required IconData icon,
     required String title,
     required String description,
-    required IconData icon,
   }) {
-    return Card(
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Icon(icon, size: 32, color: Theme.of(context).primaryColor),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            size: 24,
+            color: Theme.of(context).primaryColor,
+          ),
         ),
-      ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 } 

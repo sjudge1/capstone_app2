@@ -194,8 +194,8 @@ class _PersonFormScreenState extends State<PersonFormScreen> {
       appBar: AppBar(
         title: Text(
           widget.person == null
-              ? 'Add ${widget.organType} ${widget.listType == PersonType.patient ? "Patient" : "Donor"}'
-              : 'Edit ${widget.organType} ${widget.listType == PersonType.patient ? "Patient" : "Donor"}',
+              ? 'Add New Person'
+              : 'Edit Person',
         ),
       ),
       body: Form(

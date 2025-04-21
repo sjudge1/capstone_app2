@@ -60,7 +60,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 ListTile(
                   leading: const Icon(Icons.person_outline),
-                  title: const Text('Patient List'),
+                  title: const Text('Recipient List'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -105,7 +105,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 ListTile(
                   leading: const Icon(Icons.person_outline),
-                  title: const Text('Patient List'),
+                  title: const Text('Recipient List'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -295,7 +295,7 @@ class HomeScreen extends StatelessWidget {
                       Expanded(
                         child: _buildQuickActionCard(
                           context,
-                          title: 'Patient List',
+                          title: 'Recipient List',
                           icon: const Icon(Icons.person_outline, size: 32),
                           onTap: () {
                             Navigator.push(
@@ -348,7 +348,7 @@ class HomeScreen extends StatelessWidget {
                       Expanded(
                         child: _buildQuickActionCard(
                           context,
-                          title: 'Patient List',
+                          title: 'Recipient List',
                           icon: const Icon(Icons.person_outline, size: 32),
                           onTap: () {
                             Navigator.push(
@@ -484,13 +484,13 @@ class HomeScreen extends StatelessWidget {
                                 context,
                                 icon: Icons.calculate_outlined,
                                 title: 'Size Matching Calculator',
-                                description: 'Calculate compatibility scores based on organ measurements and patient characteristics',
+                                description: 'Calculate compatibility scores based on organ measurements and recipient characteristics',
                               ),
                               const SizedBox(height: 20),
                               _buildFeatureItem(
                                 context,
                                 icon: Icons.people_outline,
-                                title: 'Patient & Donor Management',
+                                title: 'Recipient & Donor Management',
                                 description: 'Maintain separate lists for heart and lung transplant candidates and donors',
                               ),
                               const SizedBox(height: 20),

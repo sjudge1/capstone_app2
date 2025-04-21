@@ -58,7 +58,7 @@ class _LungFindMatchesScreenState extends State<LungFindMatchesScreen> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading patients: $e')),
+        SnackBar(content: Text('Error loading recipients: $e')),
       );
     } finally {
       setState(() => _isLoading = false);

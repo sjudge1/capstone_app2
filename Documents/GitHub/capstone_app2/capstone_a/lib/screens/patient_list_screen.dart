@@ -73,7 +73,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.organType} ${widget.listType == 'patient' ? "Patients" : "Donors"}'),
+        title: Text('${widget.organType} ${widget.listType == 'patient' ? "Recipients" : "Donors"}'),
         actions: [
           IconButton(
             icon: Icon(_isEditMode ? Icons.done : Icons.edit),

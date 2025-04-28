@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/person.dart';
 import '../services/person_service.dart';
+import '../screens/comparison_screen.dart';
 
 class MatchesScreen extends StatefulWidget {
   final Person person;
@@ -277,10 +278,18 @@ class _MatchesScreenState extends State<MatchesScreen> {
                                     ],
                                   ),
                                   TextButton.icon(
-                                    icon: const Icon(Icons.visibility),
-                                    label: const Text('View Details'),
+                                    icon: const Icon(Icons.compare_arrows),
+                                    label: const Text('View Comparison'),
                                     onPressed: () {
-                                      // TODO: Show match details dialog
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ComparisonScreen(
+                                            person1: widget.person,
+                                            person2: match,
+                                          ),
+                                        ),
+                                      );
                                     },
                                   ),
                                 ],

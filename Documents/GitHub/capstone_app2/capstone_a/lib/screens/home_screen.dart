@@ -15,18 +15,36 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Organ Size Matching'),
+        title: const Text('Match4Life'),
+        backgroundColor: Colors.red,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.red, Color(0xFFF8BBD0)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
                     Icons.medical_services_outlined,
@@ -38,6 +56,7 @@ class HomeScreen extends StatelessWidget {
                     'Welcome,',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                   ),
                   Text(
@@ -49,6 +68,7 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
+            const Divider(),
             // Lung Lists
             ExpansionTile(
               leading: Image.asset(
@@ -61,6 +81,8 @@ class HomeScreen extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.person_outline),
                   title: const Text('Recipient List'),
+                  selected: ModalRoute.of(context)?.settings.name == '/lung/recipients',
+                  selectedTileColor: Colors.red.withOpacity(0.08),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -71,6 +93,7 @@ class HomeScreen extends StatelessWidget {
                           listType: 'patient',
                           userId: FirebaseAuth.instance.currentUser?.uid ?? '',
                         ),
+                        settings: const RouteSettings(name: '/lung/recipients'),
                       ),
                     );
                   },
@@ -78,6 +101,8 @@ class HomeScreen extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.volunteer_activism),
                   title: const Text('Donor List'),
+                  selected: ModalRoute.of(context)?.settings.name == '/lung/donors',
+                  selectedTileColor: Colors.red.withOpacity(0.08),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -88,24 +113,32 @@ class HomeScreen extends StatelessWidget {
                           listType: 'donor',
                           userId: FirebaseAuth.instance.currentUser?.uid ?? '',
                         ),
+                        settings: const RouteSettings(name: '/lung/donors'),
                       ),
                     );
                   },
                 ),
               ],
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 8),
+              tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+              collapsedIconColor: Colors.red,
+              iconColor: Colors.red,
+              maintainState: true,
             ),
             // Heart Lists
             ExpansionTile(
               leading: Image.asset(
                 'assets/images/heart.png',
-                width: 32,
-                height: 32,
+                width: 24,
+                height: 24,
               ),
               title: const Text('Heart'),
               children: [
                 ListTile(
                   leading: const Icon(Icons.person_outline),
                   title: const Text('Recipient List'),
+                  selected: ModalRoute.of(context)?.settings.name == '/heart/recipients',
+                  selectedTileColor: Colors.red.withOpacity(0.08),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -116,6 +149,7 @@ class HomeScreen extends StatelessWidget {
                           listType: 'patient',
                           userId: FirebaseAuth.instance.currentUser?.uid ?? '',
                         ),
+                        settings: const RouteSettings(name: '/heart/recipients'),
                       ),
                     );
                   },
@@ -123,6 +157,8 @@ class HomeScreen extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.volunteer_activism),
                   title: const Text('Donor List'),
+                  selected: ModalRoute.of(context)?.settings.name == '/heart/donors',
+                  selectedTileColor: Colors.red.withOpacity(0.08),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -133,11 +169,17 @@ class HomeScreen extends StatelessWidget {
                           listType: 'donor',
                           userId: FirebaseAuth.instance.currentUser?.uid ?? '',
                         ),
+                        settings: const RouteSettings(name: '/heart/donors'),
                       ),
                     );
                   },
                 ),
               ],
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 8),
+              tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+              collapsedIconColor: Colors.red,
+              iconColor: Colors.red,
+              maintainState: true,
             ),
             const Divider(),
             // Calculators
@@ -242,275 +284,291 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24.0),
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
-              child: Column(
-                children: [
-                  Image.asset(
-                    'assets/images/AppIcon.png',
-                    width: 100,
-                    height: 100,
+      body: FutureBuilder(
+        future: Future.delayed(const Duration(milliseconds: 500)), // Simulate loading
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          // If you want to show an empty state, you can check for empty lists here
+          // For demonstration, we'll show the main content as before
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24.0),
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/images/Icon.png',
+                        width: 100,
+                        height: 100,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Organ Size Matching Assistant',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Streamline your organ size matching process for heart and lung transplantations',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Organ Size Matching Assistant',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 24),
+                      Divider(thickness: 1, color: Colors.grey[300]),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          'Lung Transplantation',
+                          style: Theme.of(context).textTheme.titleLarge,
+                          textAlign: TextAlign.center,
                         ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Streamline your organ size matching process for heart and lung transplantations',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[600],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildQuickActionCard(
+                              context,
+                              title: 'Recipient List',
+                              icon: const Icon(Icons.person_outline, size: 32),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PatientListScreen(
+                                      organType: 'lung',
+                                      listType: 'patient',
+                                      userId: FirebaseAuth.instance.currentUser?.uid ?? '',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildQuickActionCard(
+                              context,
+                              title: 'Donor List',
+                              icon: const Icon(Icons.volunteer_activism, size: 32),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PatientListScreen(
+                                      organType: 'lung',
+                                      listType: 'donor',
+                                      userId: FirebaseAuth.instance.currentUser?.uid ?? '',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Divider(thickness: 1, color: Colors.grey[300]),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          'Heart Transplantation',
+                          style: Theme.of(context).textTheme.titleLarge,
+                          textAlign: TextAlign.center,
                         ),
-                    textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildQuickActionCard(
+                              context,
+                              title: 'Recipient List',
+                              icon: const Icon(Icons.person_outline, size: 32),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PatientListScreen(
+                                      organType: 'heart',
+                                      listType: 'patient',
+                                      userId: FirebaseAuth.instance.currentUser?.uid ?? '',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildQuickActionCard(
+                              context,
+                              title: 'Donor List',
+                              icon: const Icon(Icons.volunteer_activism, size: 32),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PatientListScreen(
+                                      organType: 'heart',
+                                      listType: 'donor',
+                                      userId: FirebaseAuth.instance.currentUser?.uid ?? '',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Divider(thickness: 1, color: Colors.grey[300]),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          'Tools',
+                          style: Theme.of(context).textTheme.titleLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildQuickActionCard(
+                              context,
+                              title: 'Heart Calculator',
+                              icon: Image.asset(
+                                'assets/images/heart.png',
+                                width: 40,
+                                height: 40,
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const HeartCalculatorScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildQuickActionCard(
+                              context,
+                              title: 'Lung Calculator',
+                              icon: Image.asset(
+                                'assets/images/lung.png',
+                                width: 40,
+                                height: 40,
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const LungCalculatorScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Divider(thickness: 1, color: Colors.grey[300]),
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      Icons.star_outline,
+                                      color: Theme.of(context).primaryColor,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Key Features',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                              child: Column(
+                                children: [
+                                  _buildFeatureItem(
+                                    context,
+                                    icon: Icons.calculate_outlined,
+                                    title: 'Size Matching Calculator',
+                                    description: 'Calculate compatibility scores based on organ measurements and recipient characteristics',
+                                  ),
+                                  const SizedBox(height: 20),
+                                  _buildFeatureItem(
+                                    context,
+                                    icon: Icons.people_outline,
+                                    title: 'Recipient & Donor Management',
+                                    description: 'Maintain separate lists for heart and lung transplant candidates and donors',
+                                  ),
+                                  const SizedBox(height: 20),
+                                  _buildFeatureItem(
+                                    context,
+                                    icon: Icons.description_outlined,
+                                    title: 'Match Justification',
+                                    description: 'Document and track the reasoning behind organ size matching decisions',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      'Lung Transplantation',
-                      style: Theme.of(context).textTheme.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildQuickActionCard(
-                          context,
-                          title: 'Recipient List',
-                          icon: const Icon(Icons.person_outline, size: 32),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PatientListScreen(
-                                  organType: 'lung',
-                                  listType: 'patient',
-                                  userId: FirebaseAuth.instance.currentUser?.uid ?? '',
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildQuickActionCard(
-                          context,
-                          title: 'Donor List',
-                          icon: const Icon(Icons.volunteer_activism, size: 32),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PatientListScreen(
-                                  organType: 'lung',
-                                  listType: 'donor',
-                                  userId: FirebaseAuth.instance.currentUser?.uid ?? '',
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      'Heart Transplantation',
-                      style: Theme.of(context).textTheme.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildQuickActionCard(
-                          context,
-                          title: 'Recipient List',
-                          icon: const Icon(Icons.person_outline, size: 32),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PatientListScreen(
-                                  organType: 'heart',
-                                  listType: 'patient',
-                                  userId: FirebaseAuth.instance.currentUser?.uid ?? '',
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildQuickActionCard(
-                          context,
-                          title: 'Donor List',
-                          icon: const Icon(Icons.volunteer_activism, size: 32),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PatientListScreen(
-                                  organType: 'heart',
-                                  listType: 'donor',
-                                  userId: FirebaseAuth.instance.currentUser?.uid ?? '',
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      'Tools',
-                      style: Theme.of(context).textTheme.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildQuickActionCard(
-                          context,
-                          title: 'Heart Calculator',
-                          icon: Image.asset(
-                            'assets/images/heart.png',
-                            width: 40,
-                            height: 40,
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const HeartCalculatorScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildQuickActionCard(
-                          context,
-                          title: 'Lung Calculator',
-                          icon: Image.asset(
-                            'assets/images/lung.png',
-                            width: 40,
-                            height: 40,
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LungCalculatorScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withOpacity(0.03),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).primaryColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.star_outline,
-                                  color: Theme.of(context).primaryColor,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Key Features',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                          child: Column(
-                            children: [
-                              _buildFeatureItem(
-                                context,
-                                icon: Icons.calculate_outlined,
-                                title: 'Size Matching Calculator',
-                                description: 'Calculate compatibility scores based on organ measurements and recipient characteristics',
-                              ),
-                              const SizedBox(height: 20),
-                              _buildFeatureItem(
-                                context,
-                                icon: Icons.people_outline,
-                                title: 'Recipient & Donor Management',
-                                description: 'Maintain separate lists for heart and lung transplant candidates and donors',
-                              ),
-                              const SizedBox(height: 20),
-                              _buildFeatureItem(
-                                context,
-                                icon: Icons.description_outlined,
-                                title: 'Match Justification',
-                                description: 'Document and track the reasoning behind organ size matching decisions',
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -522,15 +580,23 @@ class HomeScreen extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Card(
-      elevation: 2,
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        splashColor: Theme.of(context).primaryColor.withOpacity(0.1),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
-              icon,
+              SizedBox(
+                height: 48,
+                width: 48,
+                child: Center(child: icon),
+              ),
               const SizedBox(height: 8),
               Text(
                 title,

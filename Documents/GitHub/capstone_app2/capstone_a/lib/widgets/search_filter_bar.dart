@@ -169,8 +169,12 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
                                 child: Text('Date Added'),
                               ),
                               const DropdownMenuItem<String>(
-                                value: 'organ_size',
-                                child: Text('Organ Size'),
+                                value: 'organ_size_high',
+                                child: Text('Organ Size (High to Low)'),
+                              ),
+                              const DropdownMenuItem<String>(
+                                value: 'organ_size_low',
+                                child: Text('Organ Size (Low to High)'),
                               ),
                             ],
                             onChanged: widget.onSortOptionChanged,

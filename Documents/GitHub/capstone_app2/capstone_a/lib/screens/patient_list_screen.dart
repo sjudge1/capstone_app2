@@ -28,7 +28,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
   String? _selectedBloodType;
   String? _selectedGender;
   String _selectedSortOption = 'name';
-  RangeValues _organSizeRange = const RangeValues(0, 100);
+  RangeValues _organSizeRange = const RangeValues(75.0, 500.0); // Default to full heart range
   List<Person> _people = [];
   bool _isEditMode = false;
 
@@ -70,6 +70,10 @@ class _PatientListScreenState extends State<PatientListScreen> {
     final bool isLung = widget.organType.toLowerCase() == 'lung';
     final double minRange = isLung ? 2.0 : 75.0;
     final double maxRange = isLung ? 10.0 : 500.0;
+    // Ensure the initial range is always the full range for the organ type
+    if (_organSizeRange.start != minRange || _organSizeRange.end != maxRange) {
+      _organSizeRange = RangeValues(minRange, maxRange);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -165,13 +169,21 @@ class _PatientListScreenState extends State<PatientListScreen> {
                       return _getNameOrId(a).compareTo(_getNameOrId(b));
                     case 'date':
                       return b.createdAt.compareTo(a.createdAt); // Most recent first
-                    case 'organ_size':
+                    case 'organ_size_high':
                       if (isLung) {
                         return (b.predictedTotalLungCapacity ?? 0)
                             .compareTo(a.predictedTotalLungCapacity ?? 0);
                       } else {
                         return (b.predictedTotalHeartMass ?? 0)
                             .compareTo(a.predictedTotalHeartMass ?? 0);
+                      }
+                    case 'organ_size_low':
+                      if (isLung) {
+                        return (a.predictedTotalLungCapacity ?? 0)
+                            .compareTo(b.predictedTotalLungCapacity ?? 0);
+                      } else {
+                        return (a.predictedTotalHeartMass ?? 0)
+                            .compareTo(b.predictedTotalHeartMass ?? 0);
                       }
                     default:
                       return _getNameOrId(a).compareTo(_getNameOrId(b)); // Default to name

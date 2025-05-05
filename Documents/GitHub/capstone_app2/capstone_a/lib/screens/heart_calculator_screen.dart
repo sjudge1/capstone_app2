@@ -234,6 +234,75 @@ class _HeartCalculatorScreenState extends State<HeartCalculatorScreen> {
     }
   }
 
+  Future<void> _showPatientSearchDialog({
+    required BuildContext context,
+    required List<Person> patients,
+    required Person? selectedPatient,
+    required ValueChanged<Person?> onPatientSelected,
+    required String title,
+  }) async {
+    final TextEditingController searchController = TextEditingController();
+    List<Person> filteredPatients = List.from(patients);
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Select $title'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: searchController,
+                    decoration: const InputDecoration(
+                      labelText: 'Search by name',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        filteredPatients = patients
+                            .where((p) => p.name.toLowerCase().contains(value.toLowerCase()))
+                            .toList();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: 300,
+                    height: 300,
+                    child: filteredPatients.isEmpty
+                        ? const Center(child: Text('No patients found'))
+                        : ListView.builder(
+                            itemCount: filteredPatients.length,
+                            itemBuilder: (context, index) {
+                              final patient = filteredPatients[index];
+                              return ListTile(
+                                title: Text(patient.name),
+                                selected: selectedPatient?.name == patient.name,
+                                onTap: () {
+                                  onPatientSelected(patient);
+                                  Navigator.pop(context);
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -381,19 +450,34 @@ class _HeartCalculatorScreenState extends State<HeartCalculatorScreen> {
               if (_isLoading)
                 const Center(child: CircularProgressIndicator())
               else
-                DropdownButtonFormField<Person>(
-                  value: selectedPatient,
-                  decoration: InputDecoration(
-                    labelText: 'Choose a $title',
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: patients.map((patient) {
-                    return DropdownMenuItem(
-                      value: patient,
-                      child: Text(patient.name),
-                    );
-                  }).toList(),
-                  onChanged: onPatientSelected,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(selectedPatient?.name ?? 'No $title selected'),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.search, color: Colors.red),
+                        label: Text('Search $title', style: const TextStyle(color: Colors.red)),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.red),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: () => _showPatientSearchDialog(
+                          context: context,
+                          patients: patients,
+                          selectedPatient: selectedPatient,
+                          onPatientSelected: onPatientSelected,
+                          title: title,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                 ),
               const SizedBox(height: 16),
             ],
